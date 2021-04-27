@@ -25,7 +25,7 @@ broker_topics = metadata.topics()
 admin_client = KafkaAdminClient(bootstrap_servers=['localhost:9092'])
 if topic_name in broker_topics:
     deletion = admin_client.delete_topics([topic_name])
-    sleep(3)
+    sleep(2)
     try:
         future = client.cluster.request_update()
         client.poll(future=future)
@@ -42,6 +42,6 @@ producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
 with open('data/creditcard.csv', 'r') as read_obj:
     csv_dict_reader = DictReader(read_obj)
     for row in csv_dict_reader:
-		producer.send('creditcard', value=row)
-		sleep(3)    
+        producer.send('creditcard', value=row)
+        sleep(3)    
 	
