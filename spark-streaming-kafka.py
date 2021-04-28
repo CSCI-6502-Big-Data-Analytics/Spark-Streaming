@@ -12,10 +12,11 @@ from pyspark.sql.types import FloatType
 import pyspark.sql.functions as f
 import threading
 import uuid
+import time
 
 spark = SparkSession.builder.appName('fraud-detection').master("local[*]").getOrCreate()
 sc = spark.sparkContext
-ssc = StreamingContext(sc, 10)
+ssc = StreamingContext(sc, 2)
 
 mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = mongo_client["spark"]
@@ -32,7 +33,8 @@ def addToMongo(data):
     return
 
 def predict(input_transaction_list, pipelineModel, lrModel, id_list):
-    
+    start = time.time()
+
     testDf = spark.createDataFrame([Row(**i) for i in input_transaction_list])
     for col in testDf.columns:
         testDf = testDf.withColumn(col, testDf[col].cast(FloatType()))
@@ -43,6 +45,12 @@ def predict(input_transaction_list, pipelineModel, lrModel, id_list):
        
     outputDf = lrModel.transform(testDf)
     predictions = outputDf.select(f.collect_list('prediction')).first()[0]
+
+    end = time.time()
+    print("Time taken (s): ", end-start)
+    with open("load_testing/times.txt", "a") as fout:
+      fout.write(str(end-start)+"\n")
+
     print("\n=========================================================================\n")
     for i in range(len(predictions)):
       print(id_list[i], " : ", int(predictions[i]))

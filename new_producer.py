@@ -1,6 +1,6 @@
 import flask
 import json
-from flask import request, abort
+from flask import request, abort, Response
 import pymongo
 from time import sleep
 from json import dumps
@@ -65,7 +65,20 @@ def predictApi():
     #     print(thread.name)
     return {
         'success': True,
-        'message': "Transaction sent to the Spark service"
+        'message': "Transaction sent to the Spark service",
+        'transactionId': transactionData["transaction_id"]
     }    
+
+@app.route('/prediction', methods=['GET'])
+def getPrediction():    
+    transactionId = request.args.get('transactionId')
+    mongoDocs = list(db["resultData"].find({"transaction_id": transactionId}))
+    print(mongoDocs)
+    mongoDocsNew = []
+    for val in mongoDocs:
+        del val['_id']
+        mongoDocsNew.append(val)
+    print(mongoDocsNew)
+    return Response(json.dumps(mongoDocsNew),  mimetype='application/json')
 
 app.run()
