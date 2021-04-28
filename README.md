@@ -52,4 +52,4 @@ For streaming, we tried to simulate a real world scenario, where instead of read
       "Amount": 142.71,
       "Class": 0
     }
-```
+    ```
