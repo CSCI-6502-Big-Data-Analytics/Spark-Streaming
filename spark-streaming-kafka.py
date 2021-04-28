@@ -11,6 +11,7 @@ from pyspark.ml.classification import LogisticRegressionModel
 from pyspark.sql.types import FloatType
 import pyspark.sql.functions as f
 import threading
+import uuid
 
 spark = SparkSession.builder.appName('fraud-detection').master("local[*]").getOrCreate()
 sc = spark.sparkContext

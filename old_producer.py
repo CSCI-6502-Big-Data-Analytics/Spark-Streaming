@@ -3,6 +3,7 @@ from json import dumps
 from kafka import KafkaProducer, KafkaClient
 from kafka.admin import KafkaAdminClient, NewTopic
 from csv import DictReader
+import uuid
 
 topic_name = "creditcard"
 topic_list = [
@@ -42,6 +43,7 @@ producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
 with open('data/creditcard.csv', 'r') as read_obj:
     csv_dict_reader = DictReader(read_obj)
     for row in csv_dict_reader:
+        row["transaction_id"] = str(uuid.uuid4())
         producer.send('creditcard', value=row)
         sleep(3)    
 	
