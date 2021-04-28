@@ -12,6 +12,6 @@
 
 1. Run `docker-compose up`.
 2. Install the packages mentioned in requirements.txt
-3. Download the Hadoop bin files from [here](https://github.com/srccodes/hadoop-common-2.2.0-bin/archive/master.zip). Next follow [this StackOverflow Answer](https://stackoverflow.com/a/50639840) and add `HADOOP_HOME` to environment variables. Spark should be good to go now.
+3. If you're using Windows: Download the Hadoop bin files from [here](https://github.com/srccodes/hadoop-common-2.2.0-bin/archive/master.zip). Next follow [this StackOverflow Answer](https://stackoverflow.com/a/50639840) and add `HADOOP_HOME` to environment variables. Spark should be good to go now.
 4. Run `python producer.py` to start the [Kafka producer](./producer.py).
 5. Run the command `spark-submit --jars spark-streaming-kafka-0-8-assembly.jar spark-streaming-kafka.py`
