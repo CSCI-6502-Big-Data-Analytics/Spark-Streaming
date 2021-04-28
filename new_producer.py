@@ -1,15 +1,21 @@
 import flask
 import json
 from flask import request, abort
-
-app = flask.Flask(__name__)
-app.config["DEBUG"] = True
-
+import pymongo
 from time import sleep
 from json import dumps
 from kafka import KafkaProducer, KafkaClient
 from kafka.admin import KafkaAdminClient, NewTopic
 from csv import DictReader
+import threading
+import uuid
+
+app = flask.Flask(__name__)
+app.config["DEBUG"] = True
+
+mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = mongo_client["spark"]
+collection = db["transactionData"]
 
 topic_name = "creditcard"
 topic_list = [
@@ -45,10 +51,18 @@ producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
                          value_serializer=lambda x: 
                          dumps(x).encode('utf-8'))				 
 
+def addToMongo(data):
+    collection.insert_one(data)
+    return
+
 @app.route('/predict', methods=['POST'])
 def predictApi():
     transactionData = request.json
+    transactionData["transaction_id"] = str(uuid.uuid4())
     producer.send('creditcard', value=transactionData)
+    threading.Thread(target=addToMongo, args=(transactionData,)).start()
+    # for thread in threading.enumerate():
+    #     print(thread.name)
     return {
         'success': True,
         'message': "Transaction sent to the Spark service"
