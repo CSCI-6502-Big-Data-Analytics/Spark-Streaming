@@ -12,6 +12,8 @@ from pyspark.sql.types import FloatType
 import pyspark.sql.functions as f
 import threading
 import uuid
+import os
+import subprocess
 
 spark = SparkSession.builder.appName('fraud-detection').master("local[*]").getOrCreate()
 sc = spark.sparkContext
@@ -20,6 +22,9 @@ ssc = StreamingContext(sc, 10)
 mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = mongo_client["spark"]
 collection = db["resultData"]
+
+#LR_MODEL_SAVEPATH = 'hdfs://localhost:9000/saves/LRBalancedModel'
+#PIPELINE_SAVEPATH = 'hdfs://localhost:9000/saves/pipelineModelBalanced'
 
 LR_MODEL_SAVEPATH = 'saves/LRBalancedModel'
 PIPELINE_SAVEPATH = 'saves/pipelineModelBalanced'
@@ -40,7 +45,6 @@ def predict(input_transaction_list, pipelineModel, lrModel, id_list):
     testDf = pipelineModel.transform(testDf)
     selectedCols = ['features'] + all_input_cols 
     testDf = testDf.select(selectedCols)    
-       
     outputDf = lrModel.transform(testDf)
     predictions = outputDf.select(f.collect_list('prediction')).first()[0]
     print("\n=========================================================================\n")
