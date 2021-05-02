@@ -66,7 +66,10 @@ def formatTransaction(transaction):
     transaction_dict["Time"] = int(transaction_dict["Time"])
     transaction_dict["Amount"] = float(transaction_dict["Amount"])
     id_list.append(transaction_dict["transaction_id"])
-    del transaction_dict["Class"], transaction_dict["transaction_id"]
+    if "Class" in transaction_dict:
+      del transaction_dict["Class"]
+    if "transaction_id" in transaction_dict:
+      del transaction_dict["transaction_id"]
     input_transaction_list.append(transaction_dict)
     
   if input_transaction_list:
