@@ -69,7 +69,7 @@ def predictApi():
         'transactionId': transactionData["transaction_id"]
     }    
 
-@app.route('/prediction', methods=['GET'])
+@app.route('/predictionResult', methods=['GET'])
 def getPrediction():    
     transactionId = request.args.get('transactionId')
     mongoDocs = list(db["resultData"].find({"transaction_id": transactionId}))

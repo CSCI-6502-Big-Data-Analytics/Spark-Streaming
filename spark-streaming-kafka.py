@@ -16,11 +16,14 @@ import time
 
 spark = SparkSession.builder.appName('fraud-detection').master("local[*]").getOrCreate()
 sc = spark.sparkContext
-ssc = StreamingContext(sc, 2)
+ssc = StreamingContext(sc, 8)
 
 mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = mongo_client["spark"]
 collection = db["resultData"]
+
+#LR_MODEL_SAVEPATH = 'hdfs://localhost:9000/saves/LRBalancedModel'
+#PIPELINE_SAVEPATH = 'hdfs://localhost:9000/saves/pipelineModelBalanced'
 
 LR_MODEL_SAVEPATH = 'saves/LRBalancedModel'
 PIPELINE_SAVEPATH = 'saves/pipelineModelBalanced'
@@ -42,7 +45,6 @@ def predict(input_transaction_list, pipelineModel, lrModel, id_list):
     testDf = pipelineModel.transform(testDf)
     selectedCols = ['features'] + all_input_cols 
     testDf = testDf.select(selectedCols)    
-       
     outputDf = lrModel.transform(testDf)
     predictions = outputDf.select(f.collect_list('prediction')).first()[0]
 
@@ -62,7 +64,6 @@ def formatTransaction(transaction):
   input_transaction_list, id_list = [], []
   for st in transaction.collect():
     transaction_dict = json.loads(st[1])
-    #transaction_dict["_c0"] = random.randint(0,1000)
     transaction_dict["Time"] = int(transaction_dict["Time"])
     transaction_dict["Amount"] = float(transaction_dict["Amount"])
     id_list.append(transaction_dict["transaction_id"])
