@@ -12,12 +12,11 @@ from pyspark.sql.types import FloatType
 import pyspark.sql.functions as f
 import threading
 import uuid
-import os
-import subprocess
+import time
 
 spark = SparkSession.builder.appName('fraud-detection').master("local[*]").getOrCreate()
 sc = spark.sparkContext
-ssc = StreamingContext(sc, 10)
+ssc = StreamingContext(sc, 8)
 
 mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = mongo_client["spark"]
@@ -37,7 +36,8 @@ def addToMongo(data):
     return
 
 def predict(input_transaction_list, pipelineModel, lrModel, id_list):
-    
+    start = time.time()
+
     testDf = spark.createDataFrame([Row(**i) for i in input_transaction_list])
     for col in testDf.columns:
         testDf = testDf.withColumn(col, testDf[col].cast(FloatType()))
@@ -47,6 +47,12 @@ def predict(input_transaction_list, pipelineModel, lrModel, id_list):
     testDf = testDf.select(selectedCols)    
     outputDf = lrModel.transform(testDf)
     predictions = outputDf.select(f.collect_list('prediction')).first()[0]
+
+    end = time.time()
+    print("Time taken (s): ", end-start)
+    with open("load_testing/times.txt", "a") as fout:
+      fout.write(str(end-start)+"\n")
+
     print("\n=========================================================================\n")
     for i in range(len(predictions)):
       print(id_list[i], " : ", int(predictions[i]))
@@ -58,11 +64,12 @@ def formatTransaction(transaction):
   input_transaction_list, id_list = [], []
   for st in transaction.collect():
     transaction_dict = json.loads(st[1])
-    #transaction_dict["_c0"] = random.randint(0,1000)
     transaction_dict["Time"] = int(transaction_dict["Time"])
     transaction_dict["Amount"] = float(transaction_dict["Amount"])
     id_list.append(transaction_dict["transaction_id"])
-    del transaction_dict["Class"], transaction_dict["transaction_id"]
+    # if "Class" in transaction_dict:
+    #   del transaction_dict["Class"]
+    del transaction_dict["transaction_id"]
     input_transaction_list.append(transaction_dict)
     
   if input_transaction_list:

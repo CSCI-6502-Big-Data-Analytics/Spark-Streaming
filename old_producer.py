@@ -45,5 +45,5 @@ with open('data/creditcard.csv', 'r') as read_obj:
     for row in csv_dict_reader:
         row["transaction_id"] = str(uuid.uuid4())
         producer.send('creditcard', value=row)
-        sleep(3)    
+        sleep(0.001)    
 	
